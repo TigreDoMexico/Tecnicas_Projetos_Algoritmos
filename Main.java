@@ -1,10 +1,10 @@
-import BruteForce.*;
+import Exponentiation.Exponentiation;
 
 public class Main {
     public static void main (String[] args) {
-        Exponenciacao exp = new Exponenciacao();
+        Exponentiation exponentiation = new Exponentiation();
 
-        exp.Executar();
-        exp.MostrarResultados();
+        exponentiation.ExecuteAllMethods();
+        exponentiation.ShowResults();
     }
 }
