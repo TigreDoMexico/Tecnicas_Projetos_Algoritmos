@@ -42,7 +42,7 @@ public class Exponentiation implements IExecutable {
             long resultadoOperacao = Conversion.toLong(result.getResult());
             double duracaoEmMs = result.getTimeDuration();
 
-            System.out.println("Duração: " + duracaoEmMs);
+            System.out.println(MessageFormat.format("Duração: {0}", duracaoEmMs));
             System.out.println(MessageFormat.format("{0} ^ {1} = {2}", bases[i], expoentes[i], resultadoOperacao));
 
             i++;

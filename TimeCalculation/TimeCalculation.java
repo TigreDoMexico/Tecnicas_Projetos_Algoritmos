@@ -9,7 +9,7 @@ public class TimeCalculation {
         Object result = callback.call(args);
 
         long finalT = System.currentTimeMillis();
-        double totalTime = ((initialT - finalT)/1000.0);
+        double totalTime = ((finalT - initialT)/1000.0);
         return new CalculationResult(totalTime, result);
     }
 }
