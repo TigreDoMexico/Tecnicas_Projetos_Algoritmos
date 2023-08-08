@@ -4,16 +4,12 @@ import java.text.MessageFormat;
 import java.util.*;
 import Contracts.IExecutable;
 import Conversion.Conversion;
+import Generators.ArrayGenerator;
 import TimeCalculation.*;
 
 public class MaximumSubarray implements IExecutable {
 
-    private final int[][] subarrays = {
-            { 1, 2, 3, 4, 5, 6 },
-            { -2, -5, 6, -2, -3, 1, 5, -6 },
-            { -2, -5, 6, -2, -3, 1, 5, -6, 10, -2, -1, 4 },
-            { -2, -5, 6, -2, -3, 1, 5, -6, 10, -2, -1, 4, 2, -3, 5, 1, 0, -6, 8, -4, 2, -5, 10, 3, 1, -10, 6, 4, -7, 8 },
-    };
+    private int[][] subarrays = new int[4][];
 
     private List<CalculationResult> resultsDefault = new ArrayList<CalculationResult>();
     private List<CalculationResult> resultsDivideConquer = new ArrayList<CalculationResult>();
@@ -21,11 +17,24 @@ public class MaximumSubarray implements IExecutable {
 
     private TimeCalculation timeCalculation = new TimeCalculation();
 
+    public MaximumSubarray() {
+        super();
+
+        subarrays[0] = ArrayGenerator.GerarArrayRandom(500);
+        subarrays[1] = ArrayGenerator.GerarArrayRandom(2500);
+        subarrays[2] = ArrayGenerator.GerarArrayRandom(5000);
+        subarrays[3] = ArrayGenerator.GerarArrayRandom(10000);
+    }
+
     @Override
     public void ExecuteAllMethods() {
+        System.out.println("\nEXECUTANDO SUBARRAY PROBLEM\n");
+
         ExecuteBruteForce();
         ExecuteDivisaoEConquista();
         ExecuteProgramacaoDinamica();
+        
+        System.out.println("\nFINALIZADO SUBARRAY PROBLEM\n");
     }
 
     @Override
@@ -48,7 +57,7 @@ public class MaximumSubarray implements IExecutable {
 
             System.out.println(MessageFormat.format("Duração: {0}", duracaoEmMs));
             System.out.println(
-                    MessageFormat.format("SUBARRAY {0} => {1} ({2} ELEMENTOS)", Arrays.toString(subarrays[i]), resultadoOperacao, subarrays[i].length));
+                    MessageFormat.format("SUBARRAY ({0} ELEMENTOS) => {1} ", subarrays[i].length, resultadoOperacao));
 
             i++;
         }
