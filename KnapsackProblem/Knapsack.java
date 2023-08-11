@@ -2,6 +2,8 @@ package KnapsackProblem;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.*;
+
 import Contracts.IExecutable;
 import Conversion.Conversion;
 import Generators.KnapsackGenerator;
@@ -21,14 +23,15 @@ public class Knapsack implements IExecutable {
         itens.add(KnapsackGenerator.GenerateRandomList(50));
         itens.add(KnapsackGenerator.GenerateRandomList(75));
         itens.add(KnapsackGenerator.GenerateRandomList(100));
-        itens.add(KnapsackGenerator.GenerateRandomList(200));
+        itens.add(KnapsackGenerator.GenerateRandomList(150));
     }
 
     @Override
     public void ExecuteAllMethods() {
+        System.out.println("\n\nPROBLEMA KNAPSACK\n");
         ExecuteKnapsackDefault();
+        ExecuteKnapsackDivideConquer();
         ExecuteKnapsackDynamicProgramming();
-        //ExecuteKnapsackDivideConquer();
     }
 
     @Override
@@ -45,29 +48,34 @@ public class Knapsack implements IExecutable {
 
     private void PrintResults(List<CalculationResult> results) {
         int i = 0;
-        for (CalculationResult result : resultsDefault) {
+        for (CalculationResult result : results) {
             long resultadoOperacao = Conversion.toLong(result.getResult());
             double duracaoEmMs = result.getTimeDuration();
 
             System.out.println(MessageFormat.format("Duração: {0}", duracaoEmMs));
             System.out.println(
                     MessageFormat.format("KNAPSACK ({0} ELEMENTOS) => {1} ", itens.get(i).size(), resultadoOperacao));
-            
+
             i++;
         }
     }
 
     private void ExecuteKnapsackDefault() {
+        ExecutorService service = Executors.newFixedThreadPool(itens.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<Callable<CalculationResult>>();
+
         for (int i = 0; i < itens.size(); i++) {
             String[] params = { Integer.toString(i) };
             List<ItemKnapsack> copyItens = new ArrayList<ItemKnapsack>(itens.get(i));
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
+            Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(args -> {
                 return KnapsackDefault(copyItens, 1000);
             }, params);
 
-            resultsDefault.add(resultado);
+            taskList.add(task);
         }
+
+        waitAllFuturesToComplete(service, taskList, resultsDefault);
     }
 
     private int KnapsackDefault(List<ItemKnapsack> itens, int maxWeight) {
@@ -90,16 +98,21 @@ public class Knapsack implements IExecutable {
     }
 
     private void ExecuteKnapsackDivideConquer() {
+        ExecutorService service = Executors.newFixedThreadPool(itens.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<Callable<CalculationResult>>();
+
         for (int i = 0; i < itens.size(); i++) {
             String[] params = { Integer.toString(i) };
             List<ItemKnapsack> copyItens = new ArrayList<ItemKnapsack>(itens.get(i));
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
+            Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(args -> {
                 return KnapsackDivideConquer(copyItens, 1000, copyItens.size() - 1);
             }, params);
 
-            resultsDivideConquer.add(resultado);
+            taskList.add(task);
         }
+
+        waitAllFuturesToComplete(service, taskList, resultsDivideConquer);
     }
 
     private int KnapsackDivideConquer(List<ItemKnapsack> itens, int maxWeight, int index) {
@@ -120,16 +133,20 @@ public class Knapsack implements IExecutable {
     }
 
     private void ExecuteKnapsackDynamicProgramming() {
+        ExecutorService service = Executors.newFixedThreadPool(itens.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<Callable<CalculationResult>>();
+
         for (int i = 0; i < itens.size(); i++) {
             String[] params = { Integer.toString(i) };
             List<ItemKnapsack> copyItens = new ArrayList<ItemKnapsack>(itens.get(i));
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
+            Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(args -> {
                 return KnapsackDynamicProgramming(copyItens, 1000);
             }, params);
 
-            resultsDynamicProg.add(resultado);
+            taskList.add(task);
         }
+        waitAllFuturesToComplete(service, taskList, resultsDynamicProg);
     }
 
     private int KnapsackDynamicProgramming(List<ItemKnapsack> itens, int maxWeight) {
@@ -150,6 +167,27 @@ public class Knapsack implements IExecutable {
         }
 
         return memo[n][maxWeight];
+    }
+
+    private void waitAllFuturesToComplete(ExecutorService service,
+            List<Callable<CalculationResult>> tasks,
+            List<CalculationResult> resultList) {
+        try {
+            List<Future<CalculationResult>> futures = service.invokeAll(tasks);
+
+            for (Future<CalculationResult> future : futures) {
+                try {
+                    CalculationResult result = future.get();
+                    resultList.add(result);
+                } catch (InterruptedException | ExecutionException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+
+        service.shutdown();
     }
 
     private int retornaMaior(int a, int b) {
