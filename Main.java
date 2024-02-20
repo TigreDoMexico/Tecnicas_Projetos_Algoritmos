@@ -8,14 +8,13 @@ public class Main {
         MaximumSubarray maximumSubarray = new MaximumSubarray();
         Knapsack knapsackProblem = new Knapsack();
 
-        knapsackProblem.ExecuteAllMethods();
-        knapsackProblem.ShowResults();
-
         exponentiation.ExecuteAllMethods();
         exponentiation.ShowResults();
 
         maximumSubarray.ExecuteAllMethods();
         maximumSubarray.ShowResults();
 
+        knapsackProblem.ExecuteAllMethods();
+        knapsackProblem.ShowResults();
     }
 }

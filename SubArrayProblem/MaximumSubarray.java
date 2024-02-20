@@ -2,39 +2,34 @@ package SubArrayProblem;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.*;
+
 import Contracts.IExecutable;
 import Conversion.Conversion;
-import Generators.ArrayGenerator;
+import Scenario.MaximumSubarrayScenario;
 import TimeCalculation.*;
 
 public class MaximumSubarray implements IExecutable {
+    private final ArrayList<Integer[]> scenarios;
 
-    private int[][] subarrays = new int[4][];
+    private final List<CalculationResult> resultsDefault = new ArrayList<>();
+    private final List<CalculationResult> resultsDivideConquer = new ArrayList<>();
+    private final List<CalculationResult> resultsDynamicProg = new ArrayList<>();
 
-    private List<CalculationResult> resultsDefault = new ArrayList<CalculationResult>();
-    private List<CalculationResult> resultsDivideConquer = new ArrayList<CalculationResult>();
-    private List<CalculationResult> resultsDynamicProg = new ArrayList<CalculationResult>();
-
-    private TimeCalculation timeCalculation = new TimeCalculation();
+    private final TimeCalculation timeCalculation = new TimeCalculation();
 
     public MaximumSubarray() {
         super();
-
-        subarrays[0] = ArrayGenerator.GerarArrayRandom(500);
-        subarrays[1] = ArrayGenerator.GerarArrayRandom(2500);
-        subarrays[2] = ArrayGenerator.GerarArrayRandom(5000);
-        subarrays[3] = ArrayGenerator.GerarArrayRandom(10000);
+        scenarios = new ArrayList<>(MaximumSubarrayScenario.GetAll());
     }
 
     @Override
     public void ExecuteAllMethods() {
-        System.out.println("\nEXECUTANDO SUBARRAY PROBLEM\n");
+        System.out.println("\nPROBLEMA MAX SUBARRAY\n");
 
         ExecuteBruteForce();
-        ExecuteDivisaoEConquista();
-        ExecuteProgramacaoDinamica();
-        
-        System.out.println("\nFINALIZADO SUBARRAY PROBLEM\n");
+        ExecuteDivideAndConquer();
+        ExecuteDynamicProgramming();
     }
 
     @Override
@@ -51,128 +46,147 @@ public class MaximumSubarray implements IExecutable {
 
     private void PrintResults(List<CalculationResult> results) {
         int i = 0;
-        for (CalculationResult result : resultsDefault) {
-            long resultadoOperacao = Conversion.toLong(result.getResult());
-            double duracaoEmMs = result.getTimeDuration();
+        for (CalculationResult result : results) {
+            long operationResult = Conversion.toLong(result.getResult());
+            double timeConsumptionInMs = result.getTimeDuration();
 
-            System.out.println(MessageFormat.format("Duração: {0}", duracaoEmMs));
+            System.out.println(MessageFormat.format("Duração: {0}", timeConsumptionInMs));
             System.out.println(
-                    MessageFormat.format("SUBARRAY ({0} ELEMENTOS) => {1} ", subarrays[i].length, resultadoOperacao));
+                    MessageFormat.format("SUBARRAY ({0} ELEMENTOS) => {1} ", scenarios.get(i).length, operationResult));
 
             i++;
         }
     }
 
     private void ExecuteBruteForce() {
-        for (int i = 0; i < subarrays.length; i++) {
-            String[] params = { Integer.toString(i) };
+        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<>();
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
-                int index = Integer.parseInt(args[0]);
-                return BruteForce(subarrays[index]);
-            }, params);
+        for (Integer[] scenario : scenarios) {
+            Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(
+                    args -> BruteForce(scenario), null);
 
-            resultsDefault.add(resultado);
+            taskList.add(task);
         }
+
+        waitAllFuturesToComplete(service, taskList, resultsDefault);
     }
 
-    private int BruteForce(int[] numeros) {
-        if (numeros.length == 0) {
+    private int BruteForce(Integer[] array) {
+        if (array.length == 0) {
             return 0;
         }
 
-        int somaMaximo = numeros[0];
+        int maxSum = array[0];
         int i, j;
 
-        for (i = 0; i < numeros.length; i++) {
-            for (j = 0; j < numeros.length; j++) {
-                int somaCorrente = 0;
+        for (i = 0; i < array.length; i++) {
+            for (j = 0; j < array.length; j++) {
+                int currentSum = 0;
                 int k;
 
                 for (k = i; k <= j; k++) {
-                    somaCorrente += numeros[k];
+                    currentSum += array[k];
                 }
 
-                somaMaximo = retornaMaior(somaCorrente, somaMaximo);
+                maxSum = Math.max(currentSum, maxSum);
             }
         }
 
-        return somaMaximo;
+        return maxSum;
     }
 
-    private void ExecuteDivisaoEConquista() {
-        for (int i = 0; i < subarrays.length; i++) {
-            String[] params = { Integer.toString(i) };
+    private void ExecuteDivideAndConquer() {
+        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<>();
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
-                int index = Integer.parseInt(args[0]);
-                return DivideConquer(subarrays[index], 0, subarrays[index].length - 1);
-            }, params);
+        for (Integer[] scenario : scenarios) {
+            Callable<CalculationResult> task = () ->  timeCalculation.CalculateTimeConsuming(
+                    args -> DivideAndConquer(scenario, 0, scenario.length - 1), null);
 
-            resultsDivideConquer.add(resultado);
+            taskList.add(task);
         }
+
+        waitAllFuturesToComplete(service, taskList, resultsDivideConquer);
     }
 
-    private int DivideConquer(int[] numeros, int idxMinimo, int idxMaximo) {
-        if (idxMaximo <= idxMinimo) {
-            return numeros[idxMinimo];
+    private int DivideAndConquer(Integer[] array, int minIndex, int maxIndex) {
+        if (maxIndex <= minIndex) {
+            return array[minIndex];
         }
 
-        int idx_meio = (idxMaximo + idxMinimo) / 2;
+        int middleIndex = (maxIndex + minIndex) / 2;
 
-        int maior_soma_esquerda = Integer.MIN_VALUE;
-        int soma = 0, i;
+        int maxSumLeft = Integer.MIN_VALUE;
+        int sum = 0, i;
 
-        for (i = idx_meio; i >= idxMinimo; i--) {
-            soma += numeros[i];
-            if (soma > maior_soma_esquerda) {
-                maior_soma_esquerda = soma;
+        for (i = middleIndex; i >= minIndex; i--) {
+            sum += array[i];
+            if (sum > maxSumLeft) {
+                maxSumLeft = sum;
             }
         }
 
-        int maior_soma_direita = Integer.MIN_VALUE;
-        soma = 0;
-        for (i = idx_meio + 1; i <= idxMaximo; i++) {
-            soma += numeros[i];
-            if (soma > maior_soma_direita) {
-                maior_soma_direita = soma;
+        int maxSumRight = Integer.MIN_VALUE;
+        sum = 0;
+        for (i = middleIndex + 1; i <= maxIndex; i++) {
+            sum += array[i];
+            if (sum > maxSumRight) {
+                maxSumRight = sum;
             }
         }
 
-        int maior_soma_divisao_array = retornaMaior(
-                DivideConquer(numeros, idxMinimo, idx_meio),
-                DivideConquer(numeros, idx_meio + 1, idxMaximo));
+        int sumFirstHalf = DivideAndConquer(array, minIndex, middleIndex);
+        int sumSecondHalf = DivideAndConquer(array, middleIndex + 1, maxIndex);
 
-        return retornaMaior(maior_soma_divisao_array,
-                maior_soma_esquerda + maior_soma_direita);
+        int maxSumBetweenHalf = Math.max(sumFirstHalf, sumSecondHalf);
+        return Math.max(maxSumBetweenHalf, maxSumLeft + maxSumRight);
     }
 
-    private void ExecuteProgramacaoDinamica() {
-        for (int i = 0; i < subarrays.length; i++) {
-            String[] params = { Integer.toString(i) };
+    private void ExecuteDynamicProgramming() {
+        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
+        List<Callable<CalculationResult>> taskList = new ArrayList<>();
 
-            CalculationResult resultado = timeCalculation.CalculateTimeConsuming(args -> {
-                int index = Integer.parseInt(args[0]);
-                return DynamicProgramming(subarrays[index]);
-            }, params);
+        for (Integer[] scenario : scenarios) {
+            Callable<CalculationResult> task = () ->   timeCalculation.CalculateTimeConsuming(
+                    args -> DynamicProgramming(scenario), null);
 
-            resultsDynamicProg.add(resultado);
-        }
-    }
-
-    private int DynamicProgramming(int[] numeros) {
-        int somaMaximo = numeros[0];
-        int somaCorrente = numeros[0];
-
-        for (int i = 1; i < numeros.length; i++) {
-            somaCorrente = retornaMaior(somaCorrente + numeros[i], numeros[i]);
-            somaMaximo = retornaMaior(somaMaximo, somaCorrente);
+            taskList.add(task);
         }
 
-        return somaMaximo;
+        waitAllFuturesToComplete(service, taskList, resultsDynamicProg);
     }
 
-    private int retornaMaior(int a, int b) {
-        return a > b ? a : b;
+    private int DynamicProgramming(Integer[] array) {
+        int maxSum = array[0];
+        int currentSum = array[0];
+
+        for (int i = 1; i < array.length; i++) {
+            currentSum = Math.max(currentSum + array[i], array[i]);
+            maxSum = Math.max(maxSum, currentSum);
+        }
+
+        return maxSum;
+    }
+
+    private void waitAllFuturesToComplete(ExecutorService service,
+                                          List<Callable<CalculationResult>> tasks,
+                                          List<CalculationResult> resultList) {
+        try {
+            List<Future<CalculationResult>> futures = service.invokeAll(tasks);
+
+            for (Future<CalculationResult> future : futures) {
+                try {
+                    CalculationResult result = future.get();
+                    resultList.add(result);
+                } catch (InterruptedException | ExecutionException ex) {
+                    System.out.println(MessageFormat.format("Error: {0}", ex));
+                }
+            }
+        } catch (InterruptedException ex) {
+            System.out.println(MessageFormat.format("Error: {0}", ex));
+        }
+
+        service.shutdown();
     }
 }
