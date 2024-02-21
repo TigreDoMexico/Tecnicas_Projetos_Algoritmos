@@ -1,4 +1,4 @@
-package SubArrayProblem;
+package Problem.SubArrayProblem;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -6,10 +6,11 @@ import java.util.concurrent.*;
 
 import Contracts.IExecutable;
 import Conversion.Conversion;
+import Problem.Common.ProblemExecutor;
 import Scenario.MaximumSubarrayScenario;
 import TimeCalculation.*;
 
-public class MaximumSubarray implements IExecutable {
+public class MaximumSubarray extends ProblemExecutor implements IExecutable {
     private final ArrayList<Integer[]> scenarios;
 
     private final List<CalculationResult> resultsDefault = new ArrayList<>();
@@ -59,17 +60,14 @@ public class MaximumSubarray implements IExecutable {
     }
 
     private void ExecuteBruteForce() {
-        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
         for (Integer[] scenario : scenarios) {
             Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(
                     args -> BruteForce(scenario), null);
 
-            taskList.add(task);
+            AddTaskToExecute(task);
         }
 
-        waitAllFuturesToComplete(service, taskList, resultsDefault);
+        Execute(scenarios.size(), resultsDefault);
     }
 
     private int BruteForce(Integer[] array) {
@@ -97,17 +95,14 @@ public class MaximumSubarray implements IExecutable {
     }
 
     private void ExecuteDivideAndConquer() {
-        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
         for (Integer[] scenario : scenarios) {
             Callable<CalculationResult> task = () ->  timeCalculation.CalculateTimeConsuming(
                     args -> DivideAndConquer(scenario, 0, scenario.length - 1), null);
 
-            taskList.add(task);
+            AddTaskToExecute(task);
         }
 
-        waitAllFuturesToComplete(service, taskList, resultsDivideConquer);
+        Execute(scenarios.size(), resultsDivideConquer);
     }
 
     private int DivideAndConquer(Integer[] array, int minIndex, int maxIndex) {
@@ -144,17 +139,14 @@ public class MaximumSubarray implements IExecutable {
     }
 
     private void ExecuteDynamicProgramming() {
-        ExecutorService service = Executors.newFixedThreadPool(scenarios.size());
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
         for (Integer[] scenario : scenarios) {
             Callable<CalculationResult> task = () ->   timeCalculation.CalculateTimeConsuming(
                     args -> DynamicProgramming(scenario), null);
 
-            taskList.add(task);
+            AddTaskToExecute(task);
         }
 
-        waitAllFuturesToComplete(service, taskList, resultsDynamicProg);
+        Execute(scenarios.size(), resultsDynamicProg);
     }
 
     private int DynamicProgramming(Integer[] array) {
@@ -167,26 +159,5 @@ public class MaximumSubarray implements IExecutable {
         }
 
         return maxSum;
-    }
-
-    private void waitAllFuturesToComplete(ExecutorService service,
-                                          List<Callable<CalculationResult>> tasks,
-                                          List<CalculationResult> resultList) {
-        try {
-            List<Future<CalculationResult>> futures = service.invokeAll(tasks);
-
-            for (Future<CalculationResult> future : futures) {
-                try {
-                    CalculationResult result = future.get();
-                    resultList.add(result);
-                } catch (InterruptedException | ExecutionException ex) {
-                    System.out.println(MessageFormat.format("Error: {0}", ex));
-                }
-            }
-        } catch (InterruptedException ex) {
-            System.out.println(MessageFormat.format("Error: {0}", ex));
-        }
-
-        service.shutdown();
     }
 }

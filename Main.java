@@ -1,6 +1,6 @@
-import Exponentiation.Exponentiation;
-import KnapsackProblem.Knapsack;
-import SubArrayProblem.MaximumSubarray;
+import Problem.Exponentiation.Exponentiation;
+import Problem.KnapsackProblem.Knapsack;
+import Problem.SubArrayProblem.MaximumSubarray;
 
 public class Main {
     public static void main (String[] args) {

@@ -1,6 +1,6 @@
 package Scenario;
 
-import KnapsackProblem.ItemKnapsack;
+import Problem.KnapsackProblem.ItemKnapsack;
 
 import java.util.ArrayList;
 import java.util.List;

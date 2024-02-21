@@ -1,4 +1,4 @@
-package KnapsackProblem;
+package Problem.KnapsackProblem;
 
 public class ItemKnapsack {
     private int weight;

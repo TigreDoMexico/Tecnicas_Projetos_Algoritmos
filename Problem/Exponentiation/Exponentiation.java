@@ -1,4 +1,4 @@
-package Exponentiation;
+package Problem.Exponentiation;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -6,17 +6,18 @@ import java.util.concurrent.*;
 
 import Contracts.IExecutable;
 import Conversion.Conversion;
+import Problem.Common.ProblemExecutor;
 import Scenario.ExponentialScenario;
 import TimeCalculation.*;
 
-public class Exponentiation implements IExecutable {
+public class Exponentiation extends ProblemExecutor implements IExecutable {
 
     private final Integer[] bases;
     private final Integer[] exponents;
 
-    private final List<CalculationResult> resultsDefault = new ArrayList<CalculationResult>();
-    private final List<CalculationResult> resultsDivideConquer = new ArrayList<CalculationResult>();
-    private final List<CalculationResult> resultsDynamicProg = new ArrayList<CalculationResult>();
+    private final List<CalculationResult> resultsDefault = new ArrayList<>();
+    private final List<CalculationResult> resultsDivideConquer = new ArrayList<>();
+    private final List<CalculationResult> resultsDynamicProg = new ArrayList<>();
 
     private final TimeCalculation timeCalculation = new TimeCalculation();
 
@@ -43,7 +44,7 @@ public class Exponentiation implements IExecutable {
         PrintResults(resultsDivideConquer);
 
         System.out.println("\n\nRESULTADOS PROGRAMAÇÃO DINÂMICA\n");
-        PrintResults(resultsDivideConquer);
+        PrintResults(resultsDynamicProg);
     }
 
     private void PrintResults(List<CalculationResult> results) {
@@ -60,10 +61,7 @@ public class Exponentiation implements IExecutable {
     }
 
     private void ExecuteBruteForce() {
-        ExecutorService service = Executors.newFixedThreadPool(bases.length - 1);
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
-        for(int i = 0; i < bases.length; i++) {
+       for(int i = 0; i < bases.length; i++) {
             String[] params = { Integer.toString(i) };
 
             Callable<CalculationResult> task = () -> timeCalculation.CalculateTimeConsuming(args -> {
@@ -71,23 +69,21 @@ public class Exponentiation implements IExecutable {
                 return DefaultExecution(bases[index], exponents[index]);
             }, params);
 
-            taskList.add(task);
-        }
-        waitAllFuturesToComplete(service, taskList, resultsDefault);
+            AddTaskToExecute(task);
+       }
+
+       Execute(bases.length, resultsDefault);
     }
 
-    private long DefaultExecution(int base, int expoente) {
+    private long DefaultExecution(int base, int exponent) {
         long resultado = 1;
-        for (int i = 0; i < expoente; i++) {
+        for (int i = 0; i < exponent; i++) {
             resultado *= base;
         }
         return resultado;
     }
 
     private void ExecuteDivideConquer() {
-        ExecutorService service = Executors.newFixedThreadPool(bases.length - 1);
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
         for(int i = 0; i < bases.length; i++) {
             String[] params = { Integer.toString(i) };
 
@@ -96,9 +92,10 @@ public class Exponentiation implements IExecutable {
                 return DivideConquer(bases[index], exponents[index]);
             }, params);
 
-            taskList.add(task);
+            AddTaskToExecute(task);
         }
-        waitAllFuturesToComplete(service, taskList, resultsDivideConquer);
+
+        Execute(bases.length, resultsDivideConquer);
     }
 
     private long DivideConquer(int base, int exponent) {
@@ -114,9 +111,6 @@ public class Exponentiation implements IExecutable {
     }
 
     private void ExecuteDynamicProgramming() {
-        ExecutorService service = Executors.newFixedThreadPool(bases.length - 1);
-        List<Callable<CalculationResult>> taskList = new ArrayList<>();
-
         for(int i = 0; i < bases.length; i++) {
             String[] params = { Integer.toString(i) };
 
@@ -125,10 +119,10 @@ public class Exponentiation implements IExecutable {
                 return DynamicProgramming(bases[index], exponents[index]);
             }, params);
 
-            taskList.add(task);
+            AddTaskToExecute(task);
         }
 
-        waitAllFuturesToComplete(service, taskList, resultsDynamicProg);
+        Execute(bases.length, resultsDynamicProg);
     }
 
     private long DynamicProgramming(int base, int exponent) {
@@ -143,26 +137,5 @@ public class Exponentiation implements IExecutable {
         }
 
         return result[exponent];
-    }
-
-    private void waitAllFuturesToComplete(ExecutorService service,
-                                          List<Callable<CalculationResult>> tasks,
-                                          List<CalculationResult> resultList) {
-        try {
-            List<Future<CalculationResult>> futures = service.invokeAll(tasks);
-
-            for (Future<CalculationResult> future : futures) {
-                try {
-                    CalculationResult result = future.get();
-                    resultList.add(result);
-                } catch (InterruptedException | ExecutionException ex) {
-                    System.out.println(MessageFormat.format("Error: {0}", ex));
-                }
-            }
-        } catch (InterruptedException ex) {
-            System.out.println(MessageFormat.format("Error: {0}", ex));
-        }
-
-        service.shutdown();
     }
 }
