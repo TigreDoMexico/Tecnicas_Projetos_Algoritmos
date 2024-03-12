@@ -1,4 +1,4 @@
-package Contracts;
+package Problem.Common;
 
 public interface IExecutable {
     void ExecuteAllMethods();

@@ -4,7 +4,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
 
-import Contracts.IExecutable;
+import Problem.Common.IExecutable;
 import Conversion.Conversion;
 import Problem.Common.ProblemExecutor;
 import Scenario.KnapsackScenario;

@@ -1,8 +1,6 @@
 package Problem.Common;
 
-import Contracts.ICallback;
 import TimeCalculation.CalculationResult;
-import TimeCalculation.TimeCalculation;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;

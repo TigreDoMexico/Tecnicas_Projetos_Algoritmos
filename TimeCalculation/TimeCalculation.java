@@ -1,7 +1,5 @@
 package TimeCalculation;
 
-import Contracts.ICallback;
-
 public class TimeCalculation {
     public CalculationResult CalculateTimeConsuming(ICallback callback, String[] args) {
         long initialT = System.currentTimeMillis();
